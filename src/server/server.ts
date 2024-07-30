@@ -27,12 +27,13 @@ import {
 import logger from './logger';
 import { mergedGQLSchema } from '../graphql/schema';
 import { GraphQLSchema } from 'graphql';
+import { BaseContext } from '@apollo/server';
+import { resolvers } from '../graphql/resolvers';
 
-const resolvers = {
-  Query: {
-    user: () => ({ username: 'John Doe' }),
-  },
-};
+export interface AppContext {
+  req: Request;
+  res: Response;
+}
 
 export default class MonitorServer {
   private app: Express;
@@ -47,7 +48,7 @@ export default class MonitorServer {
       typeDefs: mergedGQLSchema,
       resolvers,
     });
-    this.apolloServer = new ApolloServer({
+    this.apolloServer = new ApolloServer<AppContext | BaseContext>({
       schema,
       introspection: NODE_ENV !== 'production',
       plugins: [
