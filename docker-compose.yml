@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=uptimer
+      - POSTGRES_PASSWORD=api
+      - POSTGRES_DB=uptimer
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./docker-volumes/postgres:/var/lib/postgresql
