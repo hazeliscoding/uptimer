@@ -25,16 +25,8 @@ import {
   SCRERET_KEY_TWO,
 } from './config';
 import logger from './logger';
-
-const typeDefs = `#graphql
-  type User {
-    username: String
-  }
-
-  type Query {
-    user: User
-  }
-`;
+import { mergedGQLSchema } from '../graphql/schema';
+import { GraphQLSchema } from 'graphql';
 
 const resolvers = {
   Query: {
@@ -51,7 +43,10 @@ export default class MonitorServer {
     this.app = app;
     this.httpServer = new http.Server(app);
 
-    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const schema: GraphQLSchema = makeExecutableSchema({
+      typeDefs: mergedGQLSchema,
+      resolvers,
+    });
     this.apolloServer = new ApolloServer({
       schema,
       introspection: NODE_ENV !== 'production',
@@ -119,13 +114,9 @@ export default class MonitorServer {
   private async startServer(): Promise<void> {
     try {
       const SERVER_PORT: number = parseInt(PORT!, 10) || 5000;
-      logger.info(
-        `Uptimer server has started with process id ${process.pid}`
-      );
+      logger.info(`Uptimer server has started with process id ${process.pid}`);
       this.httpServer.listen(SERVER_PORT, () => {
-        logger.info(
-          `Uptimer server is running on port ${SERVER_PORT}`
-        );
+        logger.info(`Uptimer server is running on port ${SERVER_PORT}`);
       });
     } catch (error) {
       logger.error('startServer() error method:', error);
