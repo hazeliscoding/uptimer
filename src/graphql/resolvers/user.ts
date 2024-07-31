@@ -1,57 +1,45 @@
-import { GraphQLError } from 'graphql';
-import { toUpper, upperFirst } from 'lodash';
-import { sign } from 'jsonwebtoken';
-
-import { IUserDocument, IUserResponse } from '../../interfaces/user.interface';
-import { AppContext } from '../../server/server';
-import {
-  createNewUser,
-  getUserByProp,
-  getUserByUsernameOrEmail,
-} from '../../services/user.service';
-import { INotificationDocument } from '../../interfaces/notification.interface';
+import { INotificationDocument } from '@app/interfaces/notification.interface';
+import { IUserDocument, IUserResponse } from '@app/interfaces/user.interface';
 import {
   createNotificationGroup,
   getAllNotificationGroups,
-} from '../../services/notification.service';
-import { JWT_TOKEN } from '../../server/config';
+} from '@app/services/notification.service';
+import {
+  createNewUser,
+  getUserByProp,
+  getUserBySocialId,
+  getUserByUsernameOrEmail,
+} from '@app/services/user.service';
 import { Request } from 'express';
-import { isEmail } from '../../utils/utils';
-import { UserModel } from '../../models/user.model';
+import { GraphQLError } from 'graphql';
+import { toLower, upperFirst } from 'lodash';
+import { sign } from 'jsonwebtoken';
+import { JWT_TOKEN } from '@app/server/config';
+import { isEmail } from '@app/utils/utils';
+import { UserModel } from '@app/models/user.model';
+import { AppContext } from '../../server/server';
 
 export const UserResolver = {
-  Mutation: {
-    async registerUser(
+  Query: {
+    async checkCurrentUser(
       _: undefined,
-      args: { user: IUserDocument },
+      __: undefined,
       contextValue: AppContext
     ) {
       const { req } = contextValue;
-      const { user } = args;
-
-      // TODO: Add data validation
-      const { username, email, password } = user;
-      const checkIfUserExist: IUserDocument | undefined =
-        await getUserByUsernameOrEmail(username!, email!);
-      if (checkIfUserExist) {
-        throw new GraphQLError('Invalid credentials. Email or username.');
-      }
-
-      const authData: IUserDocument = {
-        username: upperFirst(username),
-        email: toUpper(email),
-        password,
-      } as IUserDocument;
-
-      const result: IUserDocument = await createNewUser(authData);
-      const response: IUserResponse = await userReturnValue(
-        req,
-        result,
-        'register'
-      );
-
-      return response;
+      const notifications = await getAllNotificationGroups(req.currentUser!.id);
+      return {
+        user: {
+          id: req.currentUser?.id,
+          username: req.currentUser?.username,
+          email: req.currentUser?.email,
+          createdAt: new Date(),
+        },
+        notifications,
+      };
     },
+  },
+  Mutation: {
     async loginUser(
       _: undefined,
       args: { username: string; password: string },
@@ -66,14 +54,14 @@ export const UserResolver = {
         type
       );
       if (!existingUser) {
-        throw new GraphQLError('Invalid credentials. User not found.');
+        throw new GraphQLError('Invalid credentials. Email or username.');
       }
       const passwordsMatch: boolean = await UserModel.prototype.comparePassword(
         password,
         existingUser.password!
       );
       if (!passwordsMatch) {
-        throw new GraphQLError('Invalid credentials. Password mismatch.');
+        throw new GraphQLError('Invalid credentials. Password does not match.');
       }
       const response: IUserResponse = await userReturnValue(
         req,
@@ -81,6 +69,75 @@ export const UserResolver = {
         'login'
       );
       return response;
+    },
+    async registerUser(
+      _: undefined,
+      args: { user: IUserDocument },
+      contextValue: AppContext
+    ) {
+      const { req } = contextValue;
+      const { user } = args;
+      const { username, email, password } = user;
+      const checkIfUserExist: IUserDocument | undefined =
+        await getUserByUsernameOrEmail(username!, email!);
+      if (checkIfUserExist) {
+        throw new GraphQLError('Invalid crendentials. Email or username.');
+      }
+      const authData: IUserDocument = {
+        username: upperFirst(username),
+        email: toLower(email),
+        password,
+      } as IUserDocument;
+      const result: IUserDocument | undefined = await createNewUser(authData);
+      const response: IUserResponse = await userReturnValue(
+        req,
+        result,
+        'register'
+      );
+      return response;
+    },
+    async authSocialUser(
+      _: undefined,
+      args: { user: IUserDocument },
+      contextValue: AppContext
+    ) {
+      const { req } = contextValue;
+      const { user } = args;
+      const { username, email, socialId, type } = user;
+      const checkIfUserExist: IUserDocument | undefined =
+        await getUserBySocialId(socialId!, email!, type!);
+      if (checkIfUserExist) {
+        const response: IUserResponse = await userReturnValue(
+          req,
+          checkIfUserExist,
+          'login'
+        );
+        return response;
+      } else {
+        const authData: IUserDocument = {
+          username: upperFirst(username),
+          email: toLower(email),
+          ...(type === 'facebook' && {
+            facebookId: socialId,
+          }),
+          ...(type === 'google' && {
+            googleId: socialId,
+          }),
+        } as IUserDocument;
+        const result: IUserDocument | undefined = await createNewUser(authData);
+        const response: IUserResponse = await userReturnValue(
+          req,
+          result,
+          'register'
+        );
+        return response;
+      }
+    },
+    logout(_: undefined, __: undefined, contextValue: AppContext) {
+      const { req } = contextValue;
+      req.session = null;
+      req.currentUser = undefined;
+      return null;
     },
   },
   User: {
@@ -104,7 +161,6 @@ async function userReturnValue(
   } else if (type === 'login' && result && result.id && result.email) {
     notifications = await getAllNotificationGroups(result.id);
   }
-
   const userJwt: string = sign(
     {
       id: result.id,
@@ -113,14 +169,15 @@ async function userReturnValue(
     },
     JWT_TOKEN
   );
-
   req.session = { jwt: userJwt, enableAutomaticRefresh: false };
   const user: IUserDocument = {
     id: result.id,
-    username: result.username,
     email: result.email,
+    username: result.username,
     createdAt: result.createdAt,
   } as IUserDocument;
-
-  return { user, notifications };
+  return {
+    user,
+    notifications,
+  };
 }
