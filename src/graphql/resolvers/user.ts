@@ -18,6 +18,7 @@ import { JWT_TOKEN } from '@app/server/config';
 import { authenticateGraphQLRoute, isEmail } from '@app/utils/utils';
 import { UserModel } from '@app/models/user.model';
 import { AppContext } from '../../server/server';
+import { UserLoginRules, UserRegisterationRules } from '../../validations';
 
 export const UserResolver = {
   Query: {
@@ -48,6 +49,12 @@ export const UserResolver = {
     ) {
       const { req } = contextValue;
       const { username, password } = args;
+
+      await UserLoginRules.validate(
+        { username, password },
+        { abortEarly: false }
+      );
+
       const isValidEmail = isEmail(username);
       const type: string = !isValidEmail ? 'username' : 'email';
       const existingUser: IUserDocument | undefined = await getUserByProp(
@@ -78,6 +85,9 @@ export const UserResolver = {
     ) {
       const { req } = contextValue;
       const { user } = args;
+
+      await UserRegisterationRules.validate(user, { abortEarly: false });
+
       const { username, email, password } = user;
       const checkIfUserExist: IUserDocument | undefined =
         await getUserByUsernameOrEmail(username!, email!);
@@ -104,6 +114,9 @@ export const UserResolver = {
     ) {
       const { req } = contextValue;
       const { user } = args;
+
+      await UserRegisterationRules.validate(user, { abortEarly: false });
+
       const { username, email, socialId, type } = user;
       const checkIfUserExist: IUserDocument | undefined =
         await getUserBySocialId(socialId!, email!, type!);
