@@ -6,6 +6,7 @@ import { IUserDocument, IUserResponse } from '../../interfaces/user.interface';
 import { AppContext } from '../../server/server';
 import {
   createNewUser,
+  getUserByProp,
   getUserByUsernameOrEmail,
 } from '../../services/user.service';
 import { INotificationDocument } from '../../interfaces/notification.interface';
@@ -15,6 +16,8 @@ import {
 } from '../../services/notification.service';
 import { JWT_TOKEN } from '../../server/config';
 import { Request } from 'express';
+import { isEmail } from '../../utils/utils';
+import { UserModel } from '../../models/user.model';
 
 export const UserResolver = {
   Mutation: {
@@ -47,6 +50,36 @@ export const UserResolver = {
         'register'
       );
 
+      return response;
+    },
+    async loginUser(
+      _: undefined,
+      args: { username: string; password: string },
+      contextValue: AppContext
+    ) {
+      const { req } = contextValue;
+      const { username, password } = args;
+      const isValidEmail = isEmail(username);
+      const type: string = !isValidEmail ? 'username' : 'email';
+      const existingUser: IUserDocument | undefined = await getUserByProp(
+        username,
+        type
+      );
+      if (!existingUser) {
+        throw new GraphQLError('Invalid credentials. User not found.');
+      }
+      const passwordsMatch: boolean = await UserModel.prototype.comparePassword(
+        password,
+        existingUser.password!
+      );
+      if (!passwordsMatch) {
+        throw new GraphQLError('Invalid credentials. Password mismatch.');
+      }
+      const response: IUserResponse = await userReturnValue(
+        req,
+        existingUser,
+        'login'
+      );
       return response;
     },
   },

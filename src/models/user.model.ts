@@ -1,7 +1,7 @@
 import { DataTypes, Model, ModelDefined, Optional } from 'sequelize';
 import { IUserDocument } from '../interfaces/user.interface';
 import { sequelize } from '../server/database';
-import { hash } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
 
 const SALT_ROUND = 10;
 
@@ -71,7 +71,7 @@ UserModel.prototype.comparePassword = async function (
   password: string,
   hashedPassword: string
 ) {
-  return password === hashedPassword;
+  return compare(password, hashedPassword);
 };
 
 UserModel.prototype.hashPassword = async function (password: string) {
