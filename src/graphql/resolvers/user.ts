@@ -86,6 +86,7 @@ async function userReturnValue(
     id: result.id,
     username: result.username,
     email: result.email,
+    createdAt: result.createdAt,
   } as IUserDocument;
 
   return { user, notifications };
