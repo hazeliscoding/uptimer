@@ -1,5 +1,3 @@
 import { UserResolver } from './user';
 
-export const resolvers = {
-  UserResolver,
-};
+export const resolvers = [UserResolver];

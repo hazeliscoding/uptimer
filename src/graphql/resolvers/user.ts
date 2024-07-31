@@ -50,6 +50,9 @@ export const UserResolver = {
       return response;
     },
   },
+  User: {
+    createdAt: (user: IUserDocument) => new Date(user.createdAt!).toISOString(),
+  },
 };
 
 async function userReturnValue(
