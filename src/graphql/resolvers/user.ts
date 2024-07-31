@@ -15,7 +15,7 @@ import { GraphQLError } from 'graphql';
 import { toLower, upperFirst } from 'lodash';
 import { sign } from 'jsonwebtoken';
 import { JWT_TOKEN } from '@app/server/config';
-import { isEmail } from '@app/utils/utils';
+import { authenticateGraphQLRoute, isEmail } from '@app/utils/utils';
 import { UserModel } from '@app/models/user.model';
 import { AppContext } from '../../server/server';
 
@@ -27,6 +27,7 @@ export const UserResolver = {
       contextValue: AppContext
     ) {
       const { req } = contextValue;
+      authenticateGraphQLRoute(req);
       const notifications = await getAllNotificationGroups(req.currentUser!.id);
       return {
         user: {
