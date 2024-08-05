@@ -29,11 +29,16 @@ import { mergedGQLSchema } from '../graphql/schema';
 import { GraphQLSchema } from 'graphql';
 import { BaseContext } from '@apollo/server';
 import { resolvers } from '../graphql/resolvers';
+import { AppContext } from '../interfaces/monitor.interface';
 
-export interface AppContext {
-  req: Request;
-  res: Response;
-}
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 export default class MonitorServer {
   private app: Express;
