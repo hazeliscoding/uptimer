@@ -5,6 +5,11 @@ import { getSingleNotificationGroup } from './notification.service';
 
 import dayjs from 'dayjs';
 
+const HTTP_TYPE = 'http';
+const TCP_TYPE = 'tcp';
+const MONGO_TYPE = 'mongodb';
+const REDIS_TYPE = 'redis';
+
 /**
  * Create a new monitor
  * @param data
@@ -170,4 +175,36 @@ export const updateMonitorStatus = async (
   } catch (error) {
     throw new Error(error);
   }
+};
+
+/**
+ * Delete a single monitor with its associated heartbeats
+ * @param monitorId
+ * @param userId
+ * @param type
+ * @returns {Promise<IMonitorDocument[]>}
+ */
+export const deleteSingleMonitor = async (
+  monitorId: number,
+  userId: number,
+  type: string
+): Promise<IMonitorDocument[]> => {
+  try {
+    await deleteMonitorTypeHeartbeats(monitorId, type);
+    await MonitorModel.destroy({
+      where: { id: monitorId },
+    });
+    const result: IMonitorDocument[] = await getUserMonitors(userId);
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const deleteMonitorTypeHeartbeats = async (
+  monitorId: number,
+  type: string
+): Promise<void> => {
+  // TODO: delete monitor heartbeats
+  console.log(monitorId, type);
 };
