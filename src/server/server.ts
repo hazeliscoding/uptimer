@@ -31,6 +31,15 @@ import { BaseContext } from '@apollo/server';
 import { resolvers } from '../graphql/resolvers';
 import { AppContext } from '../interfaces/monitor.interface';
 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
+
 export default class MonitorServer {
   private app: Express;
   private httpServer: http.Server;
