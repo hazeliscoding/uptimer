@@ -148,6 +148,29 @@ export const toggleMonitor = async (
 };
 
 /**
+ * Update single monitor
+ * @param monitorId
+ * @param userId
+ * @param data
+ * @returns {Promise<IMonitorDocument[]>}
+ */
+export const updateSingleMonitor = async (
+  monitorId: number,
+  userId: number,
+  data: IMonitorDocument
+): Promise<IMonitorDocument[]> => {
+  try {
+    await MonitorModel.update(data, {
+      where: { id: monitorId },
+    });
+    const result: IMonitorDocument[] = await getUserMonitors(userId);
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+/**
  * Update monitor status
  * @param monitor
  * @param timestamp

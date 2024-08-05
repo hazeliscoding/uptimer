@@ -2,11 +2,16 @@ import {
   AppContext,
   IMonitorArgs,
   IMonitorDocument,
-} from '../../interfaces/monitor.interface';
-import logger from '../../server/logger';
-import { createMonitor, toggleMonitor } from '../../services/monitor.service';
-import { startSingleJob, stopSingleBackgroundJob } from '../../utils/jobs';
-import { appTimeZone, authenticateGraphQLRoute } from '../../utils/utils';
+} from '@app/interfaces/monitor.interface';
+import logger from '@app/server/logger';
+import {
+  createMonitor,
+  deleteSingleMonitor,
+  toggleMonitor,
+  updateSingleMonitor,
+} from '@app/services/monitor.service';
+import { startSingleJob, stopSingleBackgroundJob } from '@app/utils/jobs';
+import { appTimeZone, authenticateGraphQLRoute } from '@app/utils/utils';
 
 export const monitorResolver = {
   Mutation: {
@@ -57,6 +62,40 @@ export const monitorResolver = {
 
       return {
         monitors: results,
+      };
+    },
+    async updateMonitor(
+      _: undefined,
+      args: IMonitorArgs,
+      contextValue: AppContext
+    ) {
+      const { req } = contextValue;
+      authenticateGraphQLRoute(req);
+      const { monitorId, userId, monitor } = args;
+      const monitors: IMonitorDocument[] = await updateSingleMonitor(
+        parseInt(`${monitorId}`),
+        parseInt(`${userId}`),
+        monitor!
+      );
+      return {
+        monitors,
+      };
+    },
+    async deleteMonitor(
+      _: undefined,
+      args: IMonitorArgs,
+      contextValue: AppContext
+    ) {
+      const { req } = contextValue;
+      authenticateGraphQLRoute(req);
+      const { monitorId, userId, type } = args;
+      await deleteSingleMonitor(
+        parseInt(`${monitorId}`),
+        parseInt(`${userId}`),
+        type!
+      );
+      return {
+        id: monitorId,
       };
     },
   },
