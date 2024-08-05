@@ -4,6 +4,9 @@ import { IAuthPayload } from '../interfaces/user.interface';
 import { JWT_TOKEN } from '../server/config';
 import { verify } from 'jsonwebtoken';
 
+export const appTimeZone: string =
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 /**
  * Check if a string is an email
  * @param email
