@@ -5,10 +5,10 @@ import { getSingleNotificationGroup } from './notification.service';
 
 import dayjs from 'dayjs';
 
-const HTTP_TYPE = 'http';
-const TCP_TYPE = 'tcp';
-const MONGO_TYPE = 'mongodb';
-const REDIS_TYPE = 'redis';
+// const HTTP_TYPE = 'http';
+// const TCP_TYPE = 'tcp';
+// const MONGO_TYPE = 'mongodb';
+// const REDIS_TYPE = 'redis';
 
 /**
  * Create a new monitor
