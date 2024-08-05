@@ -12,6 +12,7 @@ import {
 } from '@app/services/monitor.service';
 import { startSingleJob, stopSingleBackgroundJob } from '@app/utils/jobs';
 import { appTimeZone, authenticateGraphQLRoute } from '@app/utils/utils';
+import { getSingleNotificationGroup } from '@app/services/notification.service';
 
 export const monitorResolver = {
   Mutation: {
@@ -97,6 +98,18 @@ export const monitorResolver = {
       return {
         id: monitorId,
       };
+    },
+  },
+  MonitorResult: {
+    lastChanged: (monitor: IMonitorDocument) =>
+      JSON.stringify(monitor.lastChanged),
+    responseTime: (monitor: IMonitorDocument) => {
+      return monitor.responseTime
+        ? parseInt(`${monitor.responseTime}`)
+        : monitor.responseTime;
+    },
+    notifications: (monitor: IMonitorDocument) => {
+      return getSingleNotificationGroup(monitor.notificationId!);
     },
   },
 };
