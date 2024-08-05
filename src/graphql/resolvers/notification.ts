@@ -1,5 +1,5 @@
+import { AppContext } from '../../interfaces/monitor.interface';
 import { INotificationDocument } from '../../interfaces/notification.interface';
-import { AppContext } from '../../server/server';
 import {
   createNotificationGroup,
   deleteNotificationGroup,

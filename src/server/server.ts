@@ -29,11 +29,7 @@ import { mergedGQLSchema } from '../graphql/schema';
 import { GraphQLSchema } from 'graphql';
 import { BaseContext } from '@apollo/server';
 import { resolvers } from '../graphql/resolvers';
-
-export interface AppContext {
-  req: Request;
-  res: Response;
-}
+import { AppContext } from '../interfaces/monitor.interface';
 
 export default class MonitorServer {
   private app: Express;

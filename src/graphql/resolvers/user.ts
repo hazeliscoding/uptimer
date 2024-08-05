@@ -17,8 +17,8 @@ import { sign } from 'jsonwebtoken';
 import { JWT_TOKEN } from '@app/server/config';
 import { authenticateGraphQLRoute, isEmail } from '@app/utils/utils';
 import { UserModel } from '@app/models/user.model';
-import { AppContext } from '../../server/server';
 import { UserLoginRules, UserRegisterationRules } from '../../validations';
+import { AppContext } from '../../interfaces/monitor.interface';
 
 export const UserResolver = {
   Query: {
